@@ -1,3 +1,4 @@
+.vscode
 build
 profiling
 benchmarks
@@ -5,3 +6,5 @@ dump.txt
 venv
 **/.DS_Store
 **/__pycache__
+
+test/mnist/saved_model.onnx

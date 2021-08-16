@@ -18,6 +18,7 @@ Onnx__TensorProto* searchInputByName(node_context *ctx,
 Onnx__TensorProto* searchOutputByName(node_context *ctx,
                                       int index);
 Onnx__ModelProto* openOnnxFile(char *fname);
+size_t saveOnnxFile(Onnx__ModelProto *model, char *fname);
 Onnx__TensorProto* openTensorProtoFile(char *fname);
 
 size_t exportTensorProtoFile(const Onnx__TensorProto *tensor, char *fname);

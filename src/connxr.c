@@ -21,12 +21,32 @@ int main(int argc, char **argv){
     fprintf(stderr, "not enough arguments! %s model.onnx input.pb [--dump-file]\n", argv[0]);
     return 1;
   }
-  printf("Loading model %s...", argv[1]);
+  printf("Loading model %s...\n", argv[1]);
   Onnx__ModelProto *model = openOnnxFile(argv[1]);
+
+  // printf("--- node list ---\n");
+  // int i = 0;
+  // while(i < model->graph->n_node){
+  //   int j = 0;
+  //   while(model->graph->node[i]->input[j] != NULL){
+  //     printf("node[%d].input[%d]: %s\n", i, j, model->graph->node[i]->input[j]);
+  //     j++;
+  //   }
+  //   i++;
+  // }
+
+  // printf("--- tensor list ---\n");
+  // int k = 0;
+  // while(k < model->graph->n_initializer){
+  //   printf("tensor[%d]: %s\n", k, model->graph->initializer[k]->name);
+  //   k++;
+  // }
+  saveOnnxFile(model, "test/mnist/saved_model.onnx");
+
   if (model != NULL){printf("ok!\n");}
   TRACE_MODEL(2, true, model);
 
-  printf("Loading input %s...", argv[2]);
+  printf("Loading input %s...\n", argv[2]);
   Onnx__TensorProto *inp0set0 = openTensorProtoFile(argv[2]);
   if (inp0set0 != NULL){printf("ok!\n");}
   TRACE_TENSOR(2, true, inp0set0);

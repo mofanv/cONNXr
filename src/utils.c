@@ -140,6 +140,7 @@ Onnx__AttributeProto* searchAttributeNyName( size_t n_attribute,
   return NULL;
 }
 
+
 Onnx__ModelProto* openOnnxFile(char *fname){
   TRACE_ENTRY(1);
   Onnx__ModelProto *model = NULL;
@@ -165,6 +166,26 @@ Onnx__ModelProto* openOnnxFile(char *fname){
   TRACE_EXIT(1);
   return model;
 }
+
+size_t saveOnnxFile(Onnx__ModelProto *model, char *fname){
+  
+  long len;
+  uint8_t *ret;
+
+  len = onnx__model_proto__get_packed_size(model);
+  ret = malloc(len);
+
+  onnx__model_proto__pack(model, ret);
+  fprintf(stderr,"Writing %ld serialized bytes\n",len);
+
+  FILE *fl = fopen(fname, "w");
+  
+  for(long write = 0; write < len; write += fwrite(ret, 1, len-write, fl));
+  fclose(fl);
+
+  return 1;
+}
+
 
 Onnx__TensorProto *openTensorProtoFile(char *fname){
   TRACE_ENTRY(1);
