@@ -8,8 +8,6 @@ FORMAT+=!**/protobuf/**/*
 FORMAT+=!**/third_party/**/*
 endif
 
-ONNX_CUSTOM=third_party/onnx/onnx.build
-
 ifndef ONNX_INCLUDE
 ONNX_INCLUDE+="^Add$$"
 ONNX_INCLUDE+="^ArgMax$$"
@@ -30,8 +28,6 @@ ONNX_INCLUDE+="^Transpose$$"
 ONNX_INCLUDE+="^Elu$$"
 ONNX_INCLUDE+="^Identity$$"
 endif
-
-ONNX_DOMAINS=ai.onnx
 
 CC=../veracruz-examples/wasi-sdk-12.0/bin/clang --sysroot=../veracruz-examples/wasi-sdk-12.0/share/wasi-sysroot
 CFLAGS+=-std=c99
