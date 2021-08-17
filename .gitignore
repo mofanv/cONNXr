@@ -8,3 +8,5 @@ venv
 **/__pycache__
 
 test/mnist/saved_model.onnx
+Makefile_bak
+test/*

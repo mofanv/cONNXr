@@ -59,7 +59,7 @@ VARIABLE+=ONNX_EXCLUDE
 HELP_ONNX_EXCLUDE=which schemas to exclude
 ONNX_EXCLUDE=
 
-CC=gcc
+CC=../veracruz-examples/wasi-sdk-12.0/bin/clang --sysroot=../veracruz-examples/wasi-sdk-12.0/share/wasi-sysroot
 CFLAGS+=-std=c99
 CFLAGS+=-Wall
 CFLAGS+=-g3 -gdwarf -O2
@@ -69,7 +69,6 @@ CPPFLAGS+=-D "TRACE_LEVEL=$(TRACE_LEVEL)"
 endif
 
 LDFLAGS+=-g
-LDLIBS+=-lcunit
 LDLIBS+=-lm
 
 INCDIR+=include
@@ -83,9 +82,9 @@ SRCS+=src/inference.c
 SRCS+=src/trace.c
 SRCS+=src/utils.c
 SRCS+=src/test/test_utils.c
-OBJS=$(SRCS:%.c=$(BUILDDIR)/%.o)
+OBJS=$(SRCS:%.c=$(BUILDDIR)/%.wasm)
 
-$(BUILDDIR)/%.o:%.c
+$(BUILDDIR)/%.wasm:%.c
 	@mkdir -p $(dir $@)
 	$(CC) -o $@ -c $(CFLAGS) $(CPPFLAGS) $^
 
@@ -93,105 +92,19 @@ $(BINARY): $(OBJS)
 
 DEFAULT=help
 
-# TODO: Define new objects that are compiled with -fic?
-.phony: sharedlib
-HELP_sharedlib=build sharedlib binary
-ALL+=sharedlib
-TARGET+=sharedlib
-sharedlib: CFLAGS += -fpic
-sharedlib: $(BUILDDIR)/sharedlib
-$(BUILDDIR)/sharedlib: $(OBJS)
-	$(CC) -shared -o $(BUILDDIR)/libconnxr.so -fpic $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(LDLIBS) `find build/ -iname '*.o' -type f`
+.phony:connxr
+HELP_connxr=build connxr binary
+TARGET+=connxr
+ALL+=connxr
+connxr: $(BUILDDIR)/connxr.wasm
+$(BUILDDIR)/connxr.wasm: $(OBJS)
+	$(CC) -o $@ src/connxr.c $^ $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(LDLIBS)
+
 
 .phony: clean_build
 CLEAN+=clean_build
 clean_build:
 	rm -rf $(BUILDDIR)
 
-# C unit tests, not related to models and operators
-.phony: unittests
-HELP_unittests=Build and run unit tests that are not related to models or operators
-ALL+=unittests
-TARGET+=unittests
-unittests: $(BUILDDIR)/unittests
-$(BUILDDIR)/unittests: $(OBJS)
-	$(CC) -o $@ src/test/tests.c $^ $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(LDLIBS)
-	$(BUILDDIR)/unittests 
-
-# Operator tests
-.phony:test_operators
-HELP_test_operators=run onnx backend operator tests
-TARGET_test+=test_operators
-test_operators: sharedlib
-	python tests/test_operators.py
-
-# Model tests
-.phony:test_models
-HELP_test_models=run model tests
-TARGET_test+=test_models
-test_models: sharedlib
-	python tests/test_models.py
-
-.phony: test
-HELP_test=run tests
-TARGET+=test
-test: $(TARGET_test)
-
-.phony:benchmark
-HELP_benchmark=run benchmarks of all MODELS
-TARGET+=benchmark
-benchmark: sharedlib
-	python tests/benchmarking.py
-
-.phony:connxr
-HELP_connxr=build connxr binary
-TARGET+=connxr
-ALL+=connxr
-connxr: $(BUILDDIR)/connxr
-$(BUILDDIR)/connxr: $(OBJS)
-	$(CC) -o $@ src/connxr.c $^ $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(LDLIBS)
-
-.phony:format
-HELP_format=run uncrustify to format code
-TARGET+=format
-format:
-	git ls-files -ico $(foreach PATTERN, $(FORMAT),-x '$(PATTERN)' ) | uncrustify -c ./.uncrustify.cfg -F - --no-backup --replace
-
-.phony:format-check
-HELP_format-check=check if code needs formatting and show diffs
-TARGET+=format-check
-format-check:
-	git ls-files -ico $(foreach PATTERN, $(FORMAT),-x '$(PATTERN)' ) \
-	| xargs -I % sh -c \
-	"uncrustify -c ./.uncrustify.cfg -f % \
-	 | git -c 'color.diff.new=normal 22' -c 'color.diff.old=normal 88' diff --exit-code --no-index --color --word-diff=color % -"
-
-.phony:onnx_generator
-HELP_onnx_generator=generate various onnx sources and headers
-TARGET+=onnx_generator
-onnx_generator:
-	python -m venv venv
-	. venv/bin/activate; pip install -r requirements.txt
-	cd scripts; python -m onnx_generator \
-	$(if $(ONNX_INCLUDE), --include $(ONNX_INCLUDE)) \
-	$(if $(ONNX_EXCLUDE), --exclude $(ONNX_EXCLUDE)) \
-	$(if $(ONNX_VERSION), --version $(ONNX_VERSION)) \
-	$(if $(ONNX_DOMAINS), --domains $(ONNX_DOMAINS)) \
-	-vv \
-	--force-resolve \
-	--force-sets \
-	--force-info \
-	$(shell git rev-parse --show-toplevel)
-
-.phony: distclean_venv
-DISTCLEAN+=distclean_venv
-distclean_venv:
-	rm -rf venv
-
-.phony:generate_custom_tests
-HELP_generate_custom_tests=generate the custom test models using the py scripts
-TARGET+=generate_custom_tests
-generate_custom_tests:
-	python test_data/generate_custom_tests.py generate-data -o test_data
 
 include .Makefile.template
