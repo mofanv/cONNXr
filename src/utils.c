@@ -176,7 +176,7 @@ size_t saveOnnxFile(Onnx__ModelProto *model, char *fname){
   ret = malloc(len);
 
   onnx__model_proto__pack(model, ret);
-  fprintf(stderr,"Writing %ld serialized bytes\n",len);
+  //fprintf(stderr,"Writing %ld serialized bytes\n",len);
 
   FILE *fl = fopen(fname, "w");
   
