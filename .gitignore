@@ -7,6 +7,6 @@ venv
 **/.DS_Store
 **/__pycache__
 
-test/mnist/saved_model.onnx
-Makefile_bak
+Makefile_c
 test/*
+src/connxr.c
